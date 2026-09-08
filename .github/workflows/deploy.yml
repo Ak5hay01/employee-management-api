@@ -34,15 +34,15 @@ jobs:
           parameters: |
             {
               "commands": [
+                "set -e",
                 "cd /home/ec2-user/employee-management-api",
-                "git pull origin main",
+                "git -c safe.directory=/home/ec2-user/employee-management-api pull --ff-only origin main",
                 "docker build -t employee-management-api .",
                 "docker rm -f employee-api || true",
                 "docker run -d --name employee-api -p 80:8000 -v employee-data:/app/data -e DATABASE_URL=sqlite:///./data/employees.db -e AWS_DEFAULT_REGION=us-east-1 -e S3_BUCKET_NAME=employee-management-api-akshay-2026 employee-management-api",
                 "sleep 5",
-                "curl -f http://127.0.0.1/health"
+                "curl -fsS http://127.0.0.1/health"
               ]
             }
 
-          wait-until-command-executed: true
-          max-wait-time: 600
+          timeout: 600
