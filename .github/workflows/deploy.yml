@@ -21,14 +21,28 @@ jobs:
           aws-region: us-east-1
           role-session-name: GitHubActionsDeployment
 
-      - name: Send test command to EC2
+      - name: Deploy application to EC2
         uses: forgedconcepts/aws-ssm-send-command-action@v1.1.1
         with:
           aws-region: us-east-1
+
           targets: |
             [{"Key":"InstanceIds","Values":["i-00f9ec8bd39bc2443"]}]
+
           document-name: AWS-RunShellScript
+
           parameters: |
-            {"commands":["echo \"GitHub Actions SSM test successful\"","hostname","docker --version"]}
+            {
+              "commands": [
+                "cd /home/ec2-user/employee-management-api",
+                "git pull origin main",
+                "docker build -t employee-management-api .",
+                "docker rm -f employee-api || true",
+                "docker run -d --name employee-api -p 80:8000 -v employee-data:/app/data -e DATABASE_URL=sqlite:///./data/employees.db -e AWS_DEFAULT_REGION=us-east-1 -e S3_BUCKET_NAME=employee-management-api-akshay-2026 employee-management-api",
+                "sleep 5",
+                "curl -f http://127.0.0.1/health"
+              ]
+            }
+
           wait-until-command-executed: true
           max-wait-time: 600
