@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+<title>Employee Management</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f5f7fa;
+        color: #1f2937;
+    }
+
+    .container {
+        max-width: 1100px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+
+    .header h1 {
+        margin: 0;
+        font-size: 28px;
+    }
+
+    .header p {
+        margin: 6px 0 0;
+        color: #6b7280;
+    }
+
+    button {
+        border: none;
+        border-radius: 6px;
+        padding: 10px 16px;
+        cursor: pointer;
+        font-size: 14px;
+    }
+
+    .primary-btn {
+        background: #2563eb;
+        color: white;
+    }
+
+    .primary-btn:hover {
+        background: #1d4ed8;
+    }
+
+    .card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .toolbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .search {
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        width: 280px;
+        font-size: 14px;
+    }
+
+    .employee-count {
+        font-weight: 600;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th,
+    td {
+        padding: 13px 10px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    th {
+        background: #f9fafb;
+        font-size: 13px;
+        color: #6b7280;
+    }
+
+    td {
+        font-size: 14px;
+    }
+
+    .actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .edit-btn {
+        background: #e5e7eb;
+        color: #111827;
+    }
+
+    .delete-btn {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .empty {
+        text-align: center;
+        padding: 30px;
+        color: #6b7280;
+    }
+
+    .message {
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        display: none;
+    }
+
+    .success {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .error {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    /* Modal */
+
+    .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+
+    align-items: flex-start;
+    justify-content: center;
+
+    padding: 20px;
+
+    overflow-y: auto;
+    }
+
+    .modal-content {
+       background: white;
+        width: 100%;
+        max-width: 500px;
+        border-radius: 10px;
+        padding: 25px;
+
+        max-height: calc(100vh - 40px);
+        overflow-y: auto;
+
+        margin: auto 0;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+    }
+
+    .close-btn {
+        background: transparent;
+        font-size: 24px;
+        padding: 0 5px;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+
+    .cancel-btn {
+        background: #e5e7eb;
+    }
+
+    @media (max-width: 700px) {
+        .header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .search {
+            width: 100%;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+    }
+</style>
+
+
+</head>
+
+<body>
+
+<div class="container">
+
+
+<div class="header">
+    <div>
+        <h1>Employee Management</h1>
+        <p>Manage employees through the FastAPI REST API</p>
+    </div>
+
+    <button class="primary-btn" id="addEmployeeBtn">
+        + Add Employee
+    </button>
+</div>
+
+<div id="message" class="message"></div>
+
+<div class="card">
+
+    <div class="toolbar">
+        <div class="employee-count">
+            Total Employees: <span id="employeeCount">0</span>
+        </div>
+
+        <input
+            type="text"
+            id="searchInput"
+            class="search"
+            placeholder="Search employees..."
+        >
+    </div>
+
+    <div class="table-wrapper">
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Profile</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Department</th>
+                    <th>Designation</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+
+            <tbody id="employeeTableBody">
+            </tbody>
+        </table>
+
+    </div>
+
+    <div id="emptyMessage" class="empty">
+        No employees found.
+    </div>
+
+</div>
+
+
+</div>
+
+<!-- Employee Modal -->
+
+<div id="employeeModal" class="modal">
+
+
+<div class="modal-content">
+
+    <div class="modal-header">
+
+        <h2 id="modalTitle">Add Employee</h2>
+
+        <button
+            type="button"
+            class="close-btn"
+            id="closeModalBtn">
+            ×
+        </button>
+
+    </div>
+
+    <form id="employeeForm">
+
+        <div class="form-group">
+            <label for="firstName">First Name</label>
+
+            <input
+                type="text"
+                id="firstName"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="lastName">Last Name</label>
+
+            <input
+                type="text"
+                id="lastName"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="email">Email</label>
+
+            <input
+                type="email"
+                id="email"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="department">Department</label>
+
+            <input
+                type="text"
+                id="department"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="designation">Designation</label>
+
+            <input
+                type="text"
+                id="designation"
+                required
+            >
+        </div>
+
+        <div class="form-group">
+            <label for="profileImage">Profile Image</label>
+
+            <input
+                type="file"
+                id="profileImage"
+                accept="image/jpeg,image/png,image/webp"
+            >
+        </div>
+
+        <div id="imagePreviewContainer" style="display: none; margin-top: 10px;">
+            <img
+                id="imagePreview"
+                src=""
+                alt="Profile preview"
+                style="width: 100px; height: 100px; object-fit: cover; border-radius: 50%;"
+            >
+        </div>
+
+        <div class="form-actions">
+
+            <button
+                type="button"
+                class="cancel-btn"
+                id="cancelBtn">
+                Cancel
+            </button>
+
+            <button
+                type="submit"
+                class="primary-btn">
+                Save Employee
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+
+</div>
+
+<script>
+
+    const API_URL = "/employees";
+
+    let employees = [];
+    let editingEmployeeId = null;
+
+
+    async function loadEmployees() {
+
+        try {
+
+            const response = await fetch(API_URL);
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch employees");
+            }
+
+            employees = await response.json();
+
+            displayEmployees();
+
+        } catch (error) {
+
+            showMessage(
+                "Unable to load employees.",
+                "error"
+            );
+
+            console.error(error);
+        }
+    }
+
+
+    function displayEmployees() {
+
+        const tableBody =
+            document.getElementById("employeeTableBody");
+
+        const emptyMessage =
+            document.getElementById("emptyMessage");
+
+        const searchTerm =
+            document
+                .getElementById("searchInput")
+                .value
+                .toLowerCase();
+
+        const filteredEmployees =
+            employees.filter(employee => {
+
+                const fullName =
+                    `${employee.first_name} ${employee.last_name}`
+                    .toLowerCase();
+
+                return (
+                    fullName.includes(searchTerm) ||
+                    employee.email.toLowerCase().includes(searchTerm) ||
+                    employee.department.toLowerCase().includes(searchTerm)
+                );
+
+            });
+
+
+        tableBody.innerHTML = "";
+
+
+        filteredEmployees.forEach(employee => {
+
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+            <td>${employee.id}</td>
+
+            <td>
+                ${
+                    employee.profile_image_url
+                        ? `
+                            <img
+                                src="${employee.profile_image_url}"
+                                alt="Profile"
+                                style="
+                                    width: 45px;
+                                    height: 45px;
+                                    object-fit: cover;
+                                    border-radius: 50%;
+                                "
+                            >
+                        `
+                        : `
+                            <div
+                                style="
+                                    width: 45px;
+                                    height: 45px;
+                                    border-radius: 50%;
+                                    background: #e5e7eb;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    font-size: 12px;
+                                    color: #6b7280;
+                                "
+                            >
+                                N/A
+                            </div>
+                        `
+                }
+            </td>
+
+            <td>
+                ${employee.first_name}
+                ${employee.last_name}
+            </td>
+
+            <td>${employee.email}</td>
+
+            <td>${employee.department}</td>
+
+            <td>${employee.designation}</td>
+
+            <td>
+                <button
+                    onclick="editEmployee(${employee.id})"
+                >
+                    Edit
+                </button>
+
+                <button
+                    onclick="deleteEmployee(${employee.id})"
+                >
+                    Delete
+                </button>
+            </td>
+        `;
+
+            tableBody.appendChild(row);
+
+        });
+
+
+        document.getElementById("employeeCount").textContent =
+            employees.length;
+
+
+        if (filteredEmployees.length === 0) {
+            emptyMessage.style.display = "block";
+        } else {
+            emptyMessage.style.display = "none";
+        }
+
+    }
+
+
+    function openModal(employee = null) {
+
+        const modal =
+            document.getElementById("employeeModal");
+
+        const form =
+            document.getElementById("employeeForm");
+
+
+        form.reset();
+
+        const imagePreview =
+            document.getElementById("imagePreview");
+
+        const imagePreviewContainer =
+            document.getElementById("imagePreviewContainer");
+
+        imagePreview.src = "";
+        imagePreviewContainer.style.display = "none";
+
+
+        if (employee) {
+
+            editingEmployeeId = employee.id;
+
+            document.getElementById("modalTitle").textContent =
+                "Edit Employee";
+
+            // document.getElementById("employeeId").value =
+            //     employee.id;
+
+            // document.getElementById("employeeId").disabled =
+            //     true;
+
+            document.getElementById("firstName").value =
+                employee.first_name;
+
+            document.getElementById("lastName").value =
+                employee.last_name;
+
+            document.getElementById("email").value =
+                employee.email;
+
+            document.getElementById("department").value =
+                employee.department;
+
+            document.getElementById("designation").value =
+                employee.designation;
+
+        } else {
+
+            editingEmployeeId = null;
+
+            document.getElementById("modalTitle").textContent =
+                "Add Employee";
+
+            // document.getElementById("employeeId").disabled =
+            //     false;
+        }
+
+
+        modal.style.display = "flex";
+    }
+
+
+    function closeModal() {
+
+        const modal =
+        document.getElementById("employeeModal");
+
+        const form =
+            document.getElementById("employeeForm");
+
+        const imagePreview =
+            document.getElementById("imagePreview");
+
+        const imagePreviewContainer =
+            document.getElementById("imagePreviewContainer");
+
+        modal.style.display = "none";
+
+        form.reset();
+
+        if (imagePreview) {
+            imagePreview.src = "";
+        }
+
+        if (imagePreviewContainer) {
+            imagePreviewContainer.style.display = "none";
+        }
+
+        editingEmployeeId = null;
+    }
+
+
+    async function saveEmployee(event) {
+
+        event.preventDefault();
+
+        const imageFile =
+            document.getElementById("profileImage").files[0];
+
+        const employee = {
+
+            first_name:
+                document.getElementById("firstName").value.trim(),
+
+            last_name:
+                document.getElementById("lastName").value.trim(),
+
+            email:
+                document.getElementById("email").value.trim(),
+
+            department:
+                document.getElementById("department").value.trim(),
+
+            designation:
+                document.getElementById("designation").value.trim()
+
+        };
+
+        const employeeIdBeingEdited =
+            editingEmployeeId;
+
+        try {
+
+            let response;
+
+            // ------------------------------------------------
+            // 1. Create employee
+            // ------------------------------------------------
+
+            if (employeeIdBeingEdited === null) {
+
+                response = await fetch(API_URL, {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify(employee)
+
+                });
+
+            }
+
+            // ------------------------------------------------
+            // 2. Update employee
+            // ------------------------------------------------
+
+            else {
+
+                response = await fetch(
+                    `${API_URL}/${employeeIdBeingEdited}`,
+                    {
+                        method: "PUT",
+
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+
+                        body: JSON.stringify(employee)
+                    }
+                );
+
+            }
+
+            if (!response.ok) {
+
+                const error =
+                    await response.json();
+
+                throw new Error(
+                    error.detail || "Employee operation failed"
+                );
+            }
+
+            const savedEmployee =
+                await response.json();
+
+            const employeeId =
+                savedEmployee.id;
+
+            // ------------------------------------------------
+            // 3. Upload image if selected
+            // ------------------------------------------------
+
+            if (imageFile) {
+
+                const formData =
+                    new FormData();
+
+                formData.append(
+                    "file",
+                    imageFile
+                );
+
+                const imageResponse =
+                    await fetch(
+                        `${API_URL}/${employeeId}/profile-image`,
+                        {
+                            method: "POST",
+                            body: formData
+                        }
+                    );
+
+                if (!imageResponse.ok) {
+
+                    const error =
+                        await imageResponse.json();
+
+                    throw new Error(
+                        error.detail ||
+                        "Profile image upload failed"
+                    );
+                }
+            }
+
+            // ------------------------------------------------
+            // 4. Refresh employee list
+            // ------------------------------------------------
+
+            await loadEmployees();
+
+            // ------------------------------------------------
+            // 5. Close modal
+            // ------------------------------------------------
+
+            closeModal();
+
+            showMessage(
+                employeeIdBeingEdited === null
+                    ? "Employee created successfully."
+                    : "Employee updated successfully.",
+                "success"
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            showMessage(
+                error.message,
+                "error"
+            );
+        }
+    }
+
+    async function deleteEmployee(employeeId) {
+
+        const confirmed =
+            confirm(
+                "Are you sure you want to delete this employee?"
+            );
+
+
+        if (!confirmed) {
+            return;
+        }
+
+
+        try {
+
+            const response =
+                await fetch(
+                    `${API_URL}/${employeeId}`,
+                    {
+                        method: "DELETE"
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                const error =
+                    await response.json();
+
+                throw new Error(
+                    error.detail || "Delete failed"
+                );
+
+            }
+
+
+            await loadEmployees();
+
+
+            showMessage(
+                "Employee deleted successfully.",
+                "success"
+            );
+
+
+        } catch (error) {
+
+            showMessage(
+                error.message,
+                "error"
+            );
+
+        }
+
+    }
+
+
+    function editEmployee(employeeId) {
+
+        const employee =
+            employees.find(
+                employee => employee.id === employeeId
+            );
+
+
+        if (employee) {
+            openModal(employee);
+        }
+
+    }
+
+
+    function showMessage(message, type) {
+
+        const messageElement =
+            document.getElementById("message");
+
+
+        messageElement.textContent = message;
+
+        messageElement.className =
+            `message ${type}`;
+
+        messageElement.style.display =
+            "block";
+
+
+        setTimeout(() => {
+
+            messageElement.style.display =
+                "none";
+
+        }, 3000);
+
+    }
+
+
+    document
+        .getElementById("addEmployeeBtn")
+        .addEventListener(
+            "click",
+            () => openModal()
+        );
+
+
+    document
+        .getElementById("closeModalBtn")
+        .addEventListener(
+            "click",
+            closeModal
+        );
+
+
+    document
+        .getElementById("cancelBtn")
+        .addEventListener(
+            "click",
+            closeModal
+        );
+
+
+    document
+        .getElementById("employeeForm")
+        .addEventListener(
+            "submit",
+            saveEmployee
+        );
+
+
+    document
+        .getElementById("searchInput")
+        .addEventListener(
+            "input",
+            displayEmployees
+        );
+
+
+    loadEmployees();
+
+    document
+    .getElementById("profileImage")
+    .addEventListener("change", function () {
+
+        const file = this.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        const preview =
+            document.getElementById("imagePreview");
+
+        const container =
+            document.getElementById("imagePreviewContainer");
+
+        preview.src =
+            URL.createObjectURL(file);
+
+        container.style.display =
+            "block";
+    });
+
+</script>
+
+</body>
+</html>
