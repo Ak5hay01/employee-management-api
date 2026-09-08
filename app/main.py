@@ -28,7 +28,7 @@ Base.metadata.create_all(
 app = FastAPI(
     title="Employee Management API",
     description="REST API for managing employees",
-    version="1.0.0",
+    version="1.0.1",
 )
 
 
