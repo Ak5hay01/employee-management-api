@@ -1,0 +1,32 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: arn:aws:iam::385209920003:role/GitHubActionsEmployeeManagementRole
+          aws-region: us-east-1
+          role-session-name: GitHubActionsDeployment
+
+      - name: Send test command to EC2
+        uses: MercuryTechnologies/aws-ssm-send-command-action@v0
+        id: ssm
+        with:
+          document-name: AWS-RunShellScript
+          targets: '[{"Key":"InstanceIds","Values":["i-00f9ec8bd39bc2443"]}]'
+          parameters: '{"commands":["echo \"GitHub Actions SSM test successful\"","hostname","docker --version"]}'
+          wait-until-command-executed: true
+          max-wait-time: 600
