@@ -15,18 +15,17 @@ jobs:
 
     steps:
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v6
+        uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: arn:aws:iam::385209920003:role/GitHubActionsEmployeeManagementRole
           aws-region: us-east-1
           role-session-name: GitHubActionsDeployment
 
       - name: Send test command to EC2
-        uses: MercuryTechnologies/aws-ssm-send-command-action@v0
-        id: ssm
+        uses: forgedconcepts/aws-ssm-send-command-action@v1.1.1
         with:
+          targets: |
+            [{"Key":"InstanceIds","Values":["i-00f9ec8bd39bc2443"]}]
           document-name: AWS-RunShellScript
-          targets: '[{"Key":"InstanceIds","Values":["i-00f9ec8bd39bc2443"]}]'
-          parameters: '{"commands":["echo \"GitHub Actions SSM test successful\"","hostname","docker --version"]}'
-          wait-until-command-executed: true
-          max-wait-time: 600
+          parameters: |
+            {"commands":["echo \"GitHub Actions SSM test successful\"","hostname","docker --version"]}
